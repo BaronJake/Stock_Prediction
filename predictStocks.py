@@ -56,7 +56,6 @@ def build_model(layers):
         units=layers[1],
         return_sequences=True,
     ))
-#    model.add(Dropout(0.2))
 
     model.add(LSTM(
         layers[2],
