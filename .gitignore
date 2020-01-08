@@ -1,6 +1,7 @@
-# Default ignored files
+# Ignored files
 /workspace.xml
 /venv/
 /.idea/
 /__pycache__/
 /Output.csv
+/Data/
