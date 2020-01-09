@@ -3,5 +3,5 @@
 /venv/
 /.idea/
 /__pycache__/
-/Output.csv
-/Data/
+*.csv
+
