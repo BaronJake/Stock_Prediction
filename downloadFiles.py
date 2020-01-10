@@ -6,6 +6,7 @@ from datetime import date
 
 today = date.today().strftime("%b-%d-%Y")
 
+
 def download_hist(stock_to_download):
     stock_to_download = stock_to_download.upper()
     ticker_obj = Ticker(stock_to_download)
@@ -42,13 +43,26 @@ for stock in sampled_stock_list:
     download_hist(stock)
 
 print("Done Downloading! Start Predicting!")
-output = ['Ticker', 'Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Current', 'Day 1 - Current', 'Eval', 'Length']
+output = [
+    'Ticker',
+    'Day 1',
+    'Day 2',
+    'Day 3',
+    'Day 4',
+    'Day 5',
+    'Current',
+    'Day 1 - Current',
+    'Day 5 - Day 1',
+    'Eval',
+    'Length',
+]
 append_to_file(output)
 
 for stock in sampled_stock_list:
     pred_results = read_file(stock)
     pred_results.insert(0, stock)
     pred_results.insert(7, pred_results[1]-pred_results[6])
+    pred_results.insert(8, pred_results[5]-pred_results[1])
     print(pred_results)
     append_to_file(pred_results)
 
