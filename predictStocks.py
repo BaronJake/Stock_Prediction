@@ -190,16 +190,14 @@ def processStock(df):
     #predictedf = predict_sequences_full(model, test_data, n_steps)
     predictedfuture = predict_future(model, test_data, n_steps, time_steps, future_steps)
 
-    #ft = 3
-
-    #plot_results(predictedp[:, ft], test_target[:, ft])
-    #plot_results_multiple(predictedm[:, :, ft], test_target[:, ft], time_steps)
-    #plot_results_future(predictedfuture[:, ft], test_target[:, ft], test_target.shape[0] - time_steps, future_steps)
-    #plot_results(predictedf[:, ft], test_target[:, ft])
-
     predictedfuture = scaler.inverse_transform(predictedfuture)
-    res = list(predictedfuture[-5:,3])
-    li = [df.iloc[-1,3], model.evaluate(test_data, test_target, verbose=0), len(df)]
-    res.extend(li)
+    result = list(predictedfuture[-5:,3])
+    extra_data = [
+        list(predictedfuture[-5:-4,1]),
+        df.iloc[-1,3],
+        model.evaluate(test_data, test_target, verbose=0),
+        len(df)
+    ]
+    result.extend(extra_data)
 
-    return res
+    return result
