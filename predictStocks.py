@@ -30,10 +30,7 @@ def split_data(data):
 
 def timesteps(data, time_step):
     data_raw = data.values
-    data = []
-
-    for index in range(len(data_raw) - time_step):
-        data.append(data_raw[index: index + time_step])
+    data = [data_raw[index: index + time_step] for index in range(len(data_raw) - time_step)]
 
     return np.array(data)
 
@@ -193,7 +190,7 @@ def processStock(df):
     predictedfuture = scaler.inverse_transform(predictedfuture)
     result = list(predictedfuture[-5:,3])
     extra_data = [
-        list(predictedfuture[-5:-4,1]),
+        predictedfuture[-5:-4,1][0],
         df.iloc[-1,3],
         model.evaluate(test_data, test_target, verbose=0),
         len(df)
