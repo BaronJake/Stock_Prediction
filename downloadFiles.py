@@ -3,12 +3,12 @@ from yfinance import Ticker
 from predictStocks import processStock
 from random import sample
 from datetime import date
+import logging.config
 
 today = date.today().strftime("%b-%d-%Y")
 
 
 def download_hist(stock_to_download):
-    stock_to_download = stock_to_download.upper()
     ticker_obj = Ticker(stock_to_download)
     hist = ticker_obj.history(period="max")
     hist.to_csv("Data/Stocks/"+stock_to_download+".csv")
@@ -22,6 +22,7 @@ def get_stock_list():
 
 def sample_stocks(sample_number, stocks_list):
     sampled_list = sample(stocks_list, sample_number)
+    sampled_list = [sampled_stock.upper() for sampled_stock in sampled_list]
     for sampled_stocks in sampled_list:
         stocks_list.remove(sampled_stocks)
     return sampled_list, stocks_list
@@ -30,11 +31,12 @@ def sample_stocks(sample_number, stocks_list):
 def get_new_stock(stocks_list):
     stock_id, new_list = sample_stocks(1, stocks_list)
     download_hist(stock_id[0])
-    new_data_frame = read_file(stock[0])
+    new_data_frame = read_file(stock_id)
     return stock_id[0], new_list, new_data_frame
 
 
 def validate_stock_file(df):
+    logger.info("Number of rows = %s", len(df))
     return len(df) >= 500
 
 
@@ -48,36 +50,50 @@ def append_to_file(data):
     DataFrame([data]).to_csv("Data/Outputs/"+today+".csv", mode="a", index=False, header=False)
 
 
-all_stocks_list = get_stock_list()
-sampled_stock_list, unused_stocks_list = sample_stocks(50, all_stocks_list)
+def main():
+    all_stocks_list = get_stock_list()
+    sampled_stock_list, unused_stocks_list = sample_stocks(50, all_stocks_list)
+    logger.info("Sampled Stocks")
 
-for stock in sampled_stock_list:
-    download_hist(stock)
+    for number,stock in enumerate(sampled_stock_list):
+        logger.info("Initial Sampling. Downloading: #%s %s", number, stock)
+        download_hist(stock)
+    logger.info("Done Downloading! Start Predicting!")
 
-print("Done Downloading! Start Predicting!")
-output = [
-    'Ticker',
-    'Day 1',
-    'Day 2',
-    'Day 3',
-    'Day 4',
-    'Day 5',
-    'Day 1 Open',
-    'Current',
-    'Day 1 - Current',
-    'Day 5 - Day 1',
-    'Eval',
-    'Length',
-]
-append_to_file(output)
+    output = [
+        'Ticker',
+        'Day 1',
+        'Day 2',
+        'Day 3',
+        'Day 4',
+        'Day 5',
+        'Day 1 Open',
+        'Current',
+        'Day 1 Open - Current',
+        'Day 5 - Day 1',
+        'Day 1 ending - Day 1 open',
+        'Eval',
+        'Length',
+    ]
+    append_to_file(output)
 
-for stock in sampled_stock_list:
-    df = read_file(stock)
-    while not validate_stock_file(df):
-        stock, unused_stocks_list, df = get_new_stock(unused_stocks_list)
-    pred_results = processStock(df.dropna())
-    pred_results.insert(0, stock)
-    pred_results.insert(8, pred_results[1]-pred_results[7])
-    pred_results.insert(9, pred_results[5]-pred_results[1])
-    append_to_file(pred_results)
+    for stock in sampled_stock_list:
+        df = read_file(stock)
+        logger.info("Reading file for: %s", stock)
+        while not validate_stock_file(df):
+            stock, unused_stocks_list, df = get_new_stock(unused_stocks_list)
+            logger.info("Needed to get a new stock: %s", stock)
+        pred_results = processStock(df.dropna())
+        logger.info("Finished Processing: %s", stock)
+        pred_results.insert(0, stock)
+        pred_results.insert(8, pred_results[6] - pred_results[7])
+        pred_results.insert(9, pred_results[5] - pred_results[1])
+        pred_results.insert(10, pred_results[1] - pred_results[6])
+        logger.info("Appending results to file: %s", stock)
+        append_to_file(pred_results)
 
+
+if __name__ == '__main__':
+    logging.config.fileConfig('logger.conf', disable_existing_loggers=False)
+    logger = logging.getLogger(__name__)
+    main()
