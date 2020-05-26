@@ -6,16 +6,17 @@ from keras.models import Sequential
 from numpy import newaxis
 from sklearn.preprocessing import MinMaxScaler
 import logging
+import sys
 
 logger = logging.getLogger(__name__)
 
 def normalize_data(df):
+    logger.info("Normalizing data")
     scaler = MinMaxScaler()
     window_size = df.shape[0] // 2
     for di in range(0, df.shape[0], window_size):
         scaler.fit(df.iloc[di:di + window_size, :])
         df.iloc[di:di + window_size, :] = scaler.transform(df.iloc[di:di + window_size, :])
-        logger.info("Normalizing data")
     return df, scaler
 
 
@@ -167,15 +168,27 @@ def processStock(df):
     batch_size = 50
     n_epochs = 80
     future_steps = 5
+    curr_price = df.iloc[-1, 3]
 
-    df_norm = df.copy()
-    df_norm, scaler = normalize_data(df_norm)
+    try:
+        df, scaler = normalize_data(df)
+    except:
+        error = sys.exc_info()[0]
+        logger.debug("Unable to Normalize data: %s", str(error))
 
     # Adds column for time_steps based on time_step
-    series_withsteps = timesteps(df_norm, time_steps)
+    try:
+        df = timesteps(df, time_steps)
+    except:
+        error = sys.exc_info()[0]
+        logger.debug("Unable to split data into timesteps: %s", str(error))
 
     # split data into train and test-sets
-    train, test = split_data(series_withsteps)
+    try:
+        train, test = split_data(df)
+    except:
+        error = sys.exc_info()[0]
+        logger.debug("Unable to split data into test/train sets: %s", str(error))
 
     # target datasets are last timesteps, used for verification of model
     train_data = train[:, :-1, :]
@@ -184,34 +197,54 @@ def processStock(df):
     test_data = test[:, :-1, :]
     test_target = test[:, -1, :]
 
-    model = build_model([5, 50, 50, 5])
+    try:
+        model = build_model([5, 50, 50, 5])
+    except:
+        error = sys.exc_info()[0]
+        logger.debug("Unable to Build Model: %s", str(error))
 
     logger.info("Fitting Model")
-    model.fit(
-        train_data,
-        train_target,
-        batch_size=batch_size,
-        epochs=n_epochs,
-        verbose=0
-    )
+    try:
+        model.fit(
+            train_data,
+            train_target,
+            batch_size=batch_size,
+            epochs=n_epochs,
+            verbose=0
+        )
+    except:
+        error = sys.exc_info()[0]
+        logger.debug("Unable to unable to fit model: %s", str(error))
 
     logger.info("Running Predictions")
     #predictedp = predict_point_by_point(model, test_data)
     #predictedm = predict_sequences_multiple(model, test_data, n_steps, time_steps)
     #predictedf = predict_sequences_full(model, test_data, n_steps)
-    predictedfuture = predict_future(model, test_data, n_steps, time_steps, future_steps)
+    try:
+        predictedfuture = predict_future(model, test_data, n_steps, time_steps, future_steps)
+    except:
+        error = sys.exc_info()[0]
+        logger.debug("Unable to predict values %s", str(error))
 
     logger.info("Reversing Scaler")
-    predictedfuture = scaler.inverse_transform(predictedfuture)
+    try:
+        predictedfuture = scaler.inverse_transform(predictedfuture)
+    except:
+        error = sys.exc_info()[0]
+        logger.debug("Unable to inverse transformation: %s", str(error))
 
-    result = list(predictedfuture[-5:,3])
-    extra_data = [
-        predictedfuture[-5:-4,1][0],
-        df.iloc[-1,3],
-        model.evaluate(test_data, test_target, verbose=0),
-        len(df)
-    ]
-    result.extend(extra_data)
+    try:
+        result = list(predictedfuture[-5:,3])
+        extra_data = [
+            predictedfuture[-5:-4,1][0],
+            curr_price,
+            model.evaluate(test_data, test_target, verbose=0),
+            len(df)
+        ]
+        result.extend(extra_data)
+    except:
+        error = sys.exc_info()[0]
+        logger.debug("Unable to format results array: %s", str(error))
 
     logger.info("Finished Predicting Returning Results.")
     return result
