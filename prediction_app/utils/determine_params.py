@@ -1,7 +1,7 @@
 import time
 import pandas as pd
 from sklearn.metrics import mean_squared_error
-from predictStocks import normalize_data, split_data, timesteps, build_model, predict_point_by_point
+from prediction_app.predictStocks import normalize_data, split_data, timesteps, build_model, predict_point_by_point
 
 
 # run a repeated experiment
@@ -49,7 +49,7 @@ def experiment(repeats, series, n_epochs, time_step, batch_size):
 
 
 # load dataset and drop na values
-df = pd.read_csv("C:/Users/jmper/OneDrive/Documents/Data Sets/Stocks/LGCY.csv", usecols=[1, 2, 3, 4, 5])
+df = pd.read_csv("C:/Users/jmper/OneDrive/Documents/data Sets/stocks/LGCY.csv", usecols=[1, 2, 3, 4, 5])
 df = df.dropna()
 
 #define experiment parameters

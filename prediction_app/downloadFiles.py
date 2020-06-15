@@ -1,6 +1,6 @@
 from pandas import DataFrame, read_csv
 from yfinance import Ticker
-from predictStocks import processStock
+from prediction_app.predictStocks import processStock
 from random import sample
 from datetime import date
 import logging.config
@@ -13,7 +13,7 @@ def download_hist(stock_to_download):
     try:
         ticker_obj = Ticker(stock_to_download)
         hist = ticker_obj.history(period="max")
-        hist.to_csv("Data/Stocks/"+stock_to_download+".csv")
+        hist.to_csv("data/stocks/"+stock_to_download+".csv")
     except:
         error = sys.exc_info()[0]
         logger.debug("Unable to download historical stock data for: %s %s", stock_to_download, str(error))
@@ -21,7 +21,7 @@ def download_hist(stock_to_download):
 
 def get_stock_list():
     try:
-        with open("StockList.txt") as file:
+        with open("fixtures/stocklist.txt") as file:
             whole_stocks_list = [x.strip() for x in file.readlines()]
     except:
         error = sys.exc_info()[0]
@@ -58,7 +58,7 @@ def validate_stock_file(df):
 def read_file(stock_ticker):
     # import stock data and drop some columns that weren't useful
     try:
-        df = read_csv("Data/Stocks/"+stock_ticker+".csv", usecols=[1, 2, 3, 4, 5])
+        df = read_csv("data/stocks/"+stock_ticker+".csv", usecols=[1, 2, 3, 4, 5])
     except:
         error = sys.exc_info()[0]
         logger.debug("Unable to read file for: %s %s", stock_ticker, str(error))
@@ -67,7 +67,7 @@ def read_file(stock_ticker):
 
 def append_to_file(data):
     try:
-        DataFrame([data]).to_csv("Data/Outputs/"+today+".csv", mode="a", index=False, header=False)
+        DataFrame([data]).to_csv("data/outputs/"+today+".csv", mode="a", index=False, header=False)
     except:
         error = sys.exc_info()[0]
         logger.debug("Unable to append output data to file for: %s %s", data[0], str(error))
@@ -76,7 +76,7 @@ def main():
     number_of_stocks = 100
     all_stocks_list = get_stock_list()
     sampled_stock_list, unused_stocks_list = sample_stocks(number_of_stocks, all_stocks_list)
-    logger.info("Sampled Stocks")
+    logger.info("Sampled stocks")
 
     stock_number_dict = dict()
     for number, stock in enumerate(sampled_stock_list):
@@ -119,7 +119,7 @@ def main():
         pred_results.insert(8, pred_results[6] - pred_results[7])
         pred_results.insert(9, pred_results[5] - pred_results[1])
         pred_results.insert(10, pred_results[1] - pred_results[6])
-        logger.info("Appending results to file: #%s %s", stock_number_dict[stock], stock)
+        logger.info("Appending results to file: %s", stock)
         append_to_file(pred_results)
 
 
