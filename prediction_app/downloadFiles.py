@@ -17,6 +17,7 @@ def download_hist(stock_to_download):
     except:
         error = sys.exc_info()[0]
         logger.debug("Unable to download historical stock data for: %s %s", stock_to_download, str(error))
+        raise
 
 
 def get_stock_list():
@@ -62,6 +63,7 @@ def read_file(stock_ticker):
     except:
         error = sys.exc_info()[0]
         logger.debug("Unable to read file for: %s %s", stock_ticker, str(error))
+        raise
     return df
 
 
@@ -71,6 +73,7 @@ def append_to_file(data):
     except:
         error = sys.exc_info()[0]
         logger.debug("Unable to append output data to file for: %s %s", data[0], str(error))
+        raise
 
 def main():
     number_of_stocks = 100
@@ -124,6 +127,6 @@ def main():
 
 
 if __name__ == '__main__':
-    logging.config.fileConfig('logger.conf', disable_existing_loggers=False)
+    logging.config.fileConfig('../logger.conf', disable_existing_loggers=False)
     logger = logging.getLogger(__name__)
     main()
